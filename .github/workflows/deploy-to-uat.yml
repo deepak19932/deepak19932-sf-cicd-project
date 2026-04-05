@@ -35,10 +35,10 @@ jobs:
             exit 1
           fi
 
-          echo "$ACCESS_TOKEN" | sf org login access-token \
+          sf org login access-token \
             --instance-url "$INSTANCE_URL" \
             --no-prompt \
-            --alias uat-org
+            --alias uat-org <<< "$ACCESS_TOKEN"
 
       - name: Deploy to UAT Org
         run: |
