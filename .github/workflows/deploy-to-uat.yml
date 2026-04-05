@@ -19,12 +19,29 @@ jobs:
 
       - name: Authenticate to UAT Org
         run: |
-          echo "${{ secrets.SALESFORCE_JWT_KEY }}" > server.key
-          sf org login jwt \
-            --client-id ${{ secrets.UAT_CLIENT_ID }} \
-            --jwt-key-file server.key \
-            --username ${{ secrets.UAT_USERNAME }} \
-            --instance-url https://login.salesforce.com \
+          TOKEN_RESPONSE=$(curl -s https://login.salesforce.com/services/oauth2/token \
+            -d "grant_type=password" \
+            -d "client_id=${{ secrets.UAT_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.UAT_CLIENT_SECRET }}" \
+            -d "username=${{ secrets.UAT_USERNAME }}" \
+            -d "password=${{ secrets.SF_PASSWORD }}")
+
+          echo "Token Response received"
+
+          INSTANCE_URL=$(echo $TOKEN_RESPONSE | jq -r '.instance_url')
+          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "Authentication failed!"
+            echo "$TOKEN_RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "$INSTANCE_URL" > instance_url.txt
+
+          echo "$ACCESS_TOKEN" | sf org login access-token \
+            --instance-url "$INSTANCE_URL" \
+            --no-prompt \
             --alias uat-org
 
       - name: Deploy to UAT Org
