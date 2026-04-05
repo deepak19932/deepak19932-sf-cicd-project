@@ -35,10 +35,22 @@ jobs:
             exit 1
           fi
 
-          sf org login access-token \
-            --instance-url "$INSTANCE_URL" \
-            --no-prompt \
-            --alias uat-org <<< "$ACCESS_TOKEN"
+          echo "Authentication successful!"
+          echo "Instance URL: $INSTANCE_URL"
+
+          cat > sfdx-auth.json << EOF
+          {
+            "instanceUrl": "$INSTANCE_URL",
+            "accessToken": "$ACCESS_TOKEN",
+            "orgId": "$(echo $ACCESS_TOKEN | cut -d'!' -f1)"
+          }
+          EOF
+
+          sf org login sfdx-url \
+            --sfdx-url-stdin \
+            --alias uat-org << EOF
+          force://${{ secrets.UAT_CLIENT_ID }}:${{ secrets.UAT_CLIENT_SECRET }}:$ACCESS_TOKEN@$(echo $INSTANCE_URL | sed 's|https://||')
+          EOF
 
       - name: Deploy to UAT Org
         run: |
