@@ -19,13 +19,13 @@ jobs:
 
       - name: Authenticate to Prod Org
         run: |
-          echo "${{ secrets.SALESFORCE_JWT_KEY }}" > server.key
-          sf org login jwt \
-            --client-id ${{ secrets.PROD_CLIENT_ID }} \
-            --jwt-key-file server.key \
-            --username ${{ secrets.PROD_USERNAME }} \
-            --instance-url https://login.salesforce.com \
-            --alias prod-org
+          echo "${{ secrets.SFDX_AUTH_URL_PROD }}" | sf org login sfdx-url \
+            --sfdx-url-stdin \
+            --alias prod-org \
+            --set-default
+
+      - name: Verify authentication
+        run: sf org display --target-org prod-org
 
       - name: Deploy to Production
         run: |
