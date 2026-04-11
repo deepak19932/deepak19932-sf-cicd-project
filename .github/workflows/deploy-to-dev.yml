@@ -1,4 +1,4 @@
-name: Deploy to Dev Sandbox
+name: Deploy to Dev
 
 on:
   pull_request:
@@ -19,13 +19,12 @@ jobs:
 
       - name: Authenticate to Dev Org
         run: |
-          echo "${{ secrets.SALESFORCE_JWT_KEY }}" > server.key
-          sf org login jwt \
-            --client-id ${{ secrets.DEV_CLIENT_ID }} \
-            --jwt-key-file server.key \
-            --username ${{ secrets.DEV_USERNAME }} \
-            --instance-url https://login.salesforce.com \
-            --alias dev-org
+          echo "${{ secrets.DEV_SFDX_AUTH_URL }}" > sfdx_auth_url.txt
+          sf org login sfdx-url --sfdx-url-file sfdx_auth_url.txt --alias dev-org --set-default
+          rm -f sfdx_auth_url.txt
+
+      - name: Verify authentication
+        run: sf org display --target-org dev-org
 
       - name: Deploy to Dev Org
         run: |
@@ -34,10 +33,15 @@ jobs:
             --target-org dev-org \
             --wait 30
 
-      - name: Run Apex Tests
+      - name: Run Apex Tests (if any exist)
         run: |
-          sf apex run test \
-            --target-org dev-org \
-            --test-level RunLocalTests \
-            --wait 30 \
-            --result-format human
+          TEST_CLASSES=$(find force-app -name "*Test*.cls" -o -name "*_Test.cls" 2>/dev/null | wc -l)
+          if [ "$TEST_CLASSES" -gt 0 ]; then
+            sf apex run test \
+              --target-org dev-org \
+              --test-level RunLocalTests \
+              --wait 30 \
+              --result-format human
+          else
+            echo "No Apex test classes found, skipping tests."
+          fi

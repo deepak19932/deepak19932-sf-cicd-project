@@ -19,7 +19,7 @@ jobs:
 
       - name: Authenticate to UAT Org
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL_UAT }}" > sfdx_auth_url.txt
+          echo "${{ secrets.UAT_SFDX_AUTH_URL }}" > sfdx_auth_url.txt
           sf org login sfdx-url --sfdx-url-file sfdx_auth_url.txt --alias uat-org --set-default
           rm -f sfdx_auth_url.txt
 
