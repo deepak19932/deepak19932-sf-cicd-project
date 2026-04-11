@@ -9,7 +9,7 @@ public class AccountHelper {
     }
 
     /***
-     * Creates a new Account with the given name and industry.
+     * Creates new Account with the given name and industry.
      */
     public static Account createAccount(String name, String industry) {
         Account acc = new Account(Name = name, Industry = industry);
